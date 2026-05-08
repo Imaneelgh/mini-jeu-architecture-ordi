@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖥️ Architecture des Ordinateurs - Mini-Jeu Éducatif</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+  :root {
+    --bg-dark: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #22223a;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --border: #2d2d4a;
+    --glow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === PARTICLES BACKGROUND === */
+  #particles {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: floatParticle linear infinite;
+  }
+  @keyframes floatParticle {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.3; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* === HEADER === */
+  header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 30px 20px 10px;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 5px;
+  }
+  header p {
+    color: var(--text-dim);
+    font-size: 1rem;
+  }
+
+  /* === NAV TABS === */
+  .nav-tabs {
+    position: relative; z-index: 10;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 10px 24px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-tab:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    transform: translateY(-2px);
+  }
+  .nav-tab.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15));
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+  .nav-tab .badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--accent3);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .nav-tab .badge.locked {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  /* === SCORE BAR === */
+  .score-bar {
+    position: relative; z-index: 10;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 10px 20px 20px;
+    flex-wrap: wrap;
+  }
+  .score-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+  }
+  .score-item .icon { font-size: 1.2rem; }
+  .score-item .val { color: var(--accent); font-weight: 700; }
+
+  /* === GAME AREA === */
+  .game-container {
+    position: relative; z-index: 10;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+  .level { display: none; }
+  .level.active { display: block; }
+
+  /* === LEVEL 1: MOTHERBOARD === */
+  .motherboard-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 25px;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .motherboard-layout { grid-template-columns: 1fr; }
+  }
+
+  .component-palette {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .component-palette h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .palette-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--bg-dark);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: grab;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .palette-item:hover {
+    border-color: var(--accent);
+    transform: translateX(5px);
+    box-shadow: var(--glow);
+  }
+  .palette-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  .palette-item.placed {
+    opacity: 0.3;
+    pointer-events: none;
+    border-color: var(--accent3);
+  }
+  .palette-item .emoji { font-size: 1.6rem; }
+  .palette-item .info { flex: 1; }
+  .palette-item .info .name { font-weight: 700; font-size: 0.9rem; }
+  .palette-item .info .desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+
+  .motherboard-board {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 25px;
+    min-height: 500px;
+    position: relative;
+  }
+  .motherboard-board h3 {
+    font-size: 1rem;
+    margin-bottom: 20px;
+    color: var(--accent2);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .drop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+    background: rgba(15, 15, 26, 0.5);
+  }
+  .drop-zone .zone-label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+  .drop-zone .zone-icon {
+    font-size: 2rem;
+    opacity: 0.3;
+  }
+  .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.05);
+    box-shadow: var(--glow);
+    transform: scale(1.02);
+  }
+  .drop-zone.correct {
+    border-color: var(--accent3) !important;
+    border-style: solid !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    animation: correctPulse 0.6s;
+  }
+  .drop-zone.incorrect {
+    border-color: var(--danger) !important;
+    border-style: solid !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    animation: shake 0.5s;
+  }
+  .drop-zone .placed-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+  .drop-zone .placed-item .emoji { font-size: 2rem; }
+  .drop-zone .placed-item .name { font-weight: 700; font-size: 0.85rem; color: var(--accent3); }
+
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* === LEVEL 2: VON NEUMANN === */
+  .von-neumann {
+    text-align: center;
+  }
+  .von-neumann h3 {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .von-neumann .subtitle {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .vn-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
+  .vn-box {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 24px;
+    min-width: 160px;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .vn-box.placed {
+    border-color: var(--accent3);
+    background: rgba(16, 185, 129, 0.1);
+  }
+  .vn-box .vn-icon { font-size: 2rem; margin-bottom: 5px; }
+  .vn-box .vn-name { font-weight: 700; font-size: 0.95rem; }
+  .vn-box .vn-desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+  .vn-arrow {
+    font-size: 1.5rem;
+    color: var(--accent);
+    animation: arrowPulse 1.5s infinite;
+  }
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .vn-drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 18px 24px;
+    min-width: 160px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: all 0.3s;
+    background: rgba(15, 15, 26, 0.5);
+  }
+  .vn-drop-zone .placeholder {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .vn-drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.05);
+  }
+  .vn-drop-zone.correct {
+    border-color: var(--accent3) !important;
+    border-style: solid !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+  }
+  .vn-drop-zone.incorrect {
+    border-color: var(--danger) !important;
+    border-style: solid !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+    animation: shake 0.5s;
+  }
+
+  .vn-palette {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .vn-palette-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 18px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: grab;
+    transition: all 0.3s;
+    user-select: none;
+  }
+  .vn-palette-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: var(--glow);
+  }
+  .vn-palette-item.dragging { opacity: 0.4; }
+  .vn-palette-item.placed {
+    opacity: 0.3;
+    pointer-events: none;
+    border-color: var(--accent3);
+  }
+  .vn-palette-item .emoji { font-size: 1.4rem; }
+  .vn-palette-item .name { font-weight: 700; font-size: 0.85rem; }
+
+  /* === LEVEL 3: QUIZ === */
+  .quiz-container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .quiz-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+  }
+  .quiz-card h3 {
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .quiz-card .q-text {
+    font-size: 1rem;
+    margin: 15px 0;
+    line-height: 1.6;
+  }
+  .quiz-options {
+    display: grid;
+    gap: 10px;
+  }
+  .quiz-option {
+    padding: 14px 18px;
+    background: var(--bg-dark);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .quiz-option:hover {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.05);
+  }
+  .quiz-option .letter {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .quiz-option.correct {
+    border-color: var(--accent3) !important;
+    background: rgba(16, 185, 129, 0.15) !important;
+  }
+  .quiz-option.correct .letter { background: var(--accent3); color: #000; }
+  .quiz-option.wrong {
+    border-color: var(--danger) !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+  }
+  .quiz-option.wrong .letter { background: var(--danger); color: #fff; }
+  .quiz-option.disabled { pointer-events: none; }
+
+  .quiz-explanation {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .quiz-explanation.show { display: block; }
+  .quiz-explanation.correct-exp {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--accent3);
+  }
+  .quiz-explanation.wrong-exp {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+  }
+
+  /* === BUTTONS === */
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+  }
+  .btn-secondary {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+  }
+
+  /* === MODAL === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 450px;
+    width: 90%;
+    animation: modalIn 0.4s;
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal .trophy { font-size: 4rem; margin-bottom: 15px; }
+  .modal h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .modal p { color: var(--text-dim); margin-bottom: 8px; }
+  .modal .score-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 15px 0;
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-container {
+    margin-bottom: 20px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--bg-dark);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  /* === TOOLTIP === */
+  .tooltip {
+    position: absolute;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    max-width: 220px;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: var(--glow);
+    display: none;
+  }
+  .tooltip.show { display: block; }
+
+  /* === CONFETTI === */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    z-index: 1001;
+    pointer-events: none;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.5rem; }
+    .drop-grid { grid-template-columns: 1fr 1fr; }
+    .vn-diagram { flex-direction: column; }
+    .vn-arrow { transform: rotate(90deg); }
+    .modal { padding: 25px; }
+  }
+
+  /* === FOOTER === */
+  footer {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- Header -->
+<header>
+  <h1>🖥️ Architecture des Ordinateurs</h1>
+  <p>Tronc Commun Informatique — Mini-Jeu Éducatif Interactif</p>
+</header>
+
+<!-- Nav Tabs -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchLevel(1)">
+    🧩 Niveau 1 — Composants
+    <span class="badge" id="badge1">●</span>
+  </button>
+  <button class="nav-tab" onclick="switchLevel(2)">
+    🏗️ Niveau 2 — Von Neumann
+    <span class="badge locked" id="badge2">🔒</span>
+  </button>
+  <button class="nav-tab" onclick="switchLevel(3)">
+    🧠 Niveau 3 — Quiz
+    <span class="badge locked" id="badge3">🔒</span>
+  </button>
+</div>
+
+<!-- Score Bar -->
+<div class="score-bar">
+  <div class="score-item"><span class="icon">⭐</span> Score : <span class="val" id="totalScore">0</span></div>
+  <div class="score-item"><span class="icon">✅</span> Correct : <span class="val" id="correctCount">0</span></div>
+  <div class="score-item"><span class="icon">❌</span> Erreurs : <span class="val" id="wrongCount">0</span></div>
+  <div class="score-item"><span class="icon">🏆</span> Niveau : <span class="val" id="currentLevel">1</span></div>
+</div>
+
+<!-- Game Container -->
+<div class="game-container">
+
+  <!-- ========== LEVEL 1: COMPONENTS ========== -->
+  <div class="level active" id="level1">
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>Placer les composants sur la carte mère</span>
+        <span id="l1progress">0 / 6</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="l1bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="motherboard-layout">
+      <!-- Palette -->
+      <div class="component-palette">
+        <h3>📦 Composants à placer</h3>
+        <div id="palette1"></div>
+      </div>
+
+      <!-- Motherboard -->
+      <div class="motherboard-board">
+        <h3>🔧 Carte Mère — Zone de placement</h3>
+        <div class="drop-grid" id="dropGrid1"></div>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="resetLevel1()">🔄 Réinitialiser</button>
+          <button class="btn btn-primary" id="checkL1Btn" onclick="checkLevel1()" disabled>✅ Vérifier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LEVEL 2: VON NEUMANN ========== -->
+  <div class="level" id="level2">
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>Architecturer le modèle de Von Neumann</span>
+        <span id="l2progress">0 / 5</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="l2bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="von-neumann">
+      <h3>🏗️ Architecture de Von Neumann</h3>
+      <p class="subtitle">Glissez les composants vers leur emplacement correct dans l'architecture</p>
+
+      <div class="vn-palette" id="vnPalette"></div>
+
+      <div class="vn-diagram" id="vnDiagram"></div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="resetLevel2()">🔄 Réinitialiser</button>
+        <button class="btn btn-primary" id="checkL2Btn" onclick="checkLevel2()" disabled>✅ Vérifier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LEVEL 3: QUIZ ========== -->
+  <div class="level" id="level3">
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>Test de connaissances</span>
+        <span id="l3progress">0 / 8</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="l3bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="quiz-container" id="quizContainer"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="checkL3Btn" onclick="finishQuiz()" disabled>🏆 Terminer le Quiz</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="trophy" id="modalEmoji">🏆</div>
+    <h2 id="modalTitle">Niveau Terminé !</h2>
+    <p id="modalText">Excellent travail !</p>
+    <div class="score-display" id="modalScore">+100</div>
+    <p id="modalSubtext"></p>
+    <div class="actions" style="margin-top:20px">
+      <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-primary" id="modalNextBtn" onclick="nextLevel()">Niveau Suivant →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  🎓 Mini-Jeu Éducatif — Architecture des Ordinateurs — Tronc Commun Informatique — 2026
+</footer>
+
+<script>
+// ============================================
+// GLOBAL STATE
+// ============================================
+const state = {
+  score: 0,
+  correct: 0,
+  wrong: 0,
+  currentLevel: 1,
+  unlockedLevels: [1],
+  level1: { placed: {}, total: 6 },
+  level2: { placed: {}, total: 5 },
+  level3: { answered: 0, total: 8 }
+};
+
+// ============================================
+// PARTICLES
+// ============================================
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (8 + Math.random() * 15) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 3) + 'px';
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// ============================================
+// NAVIGATION
+// ============================================
+function switchLevel(n) {
+  if (!state.unlockedLevels.includes(n)) {
+    alert('🔒 Terminez le niveau précédent pour débloquer celui-ci !');
+    return;
+  }
+  state.currentLevel = n;
+  document.querySelectorAll('.level').forEach(l => l.classList.remove('active'));
+  document.getElementById('level' + n).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', i + 1 === n);
+  });
+  document.getElementById('currentLevel').textContent = n;
+}
+
+function nextLevel() {
+  closeModal();
+  const next = state.currentLevel + 1;
+  if (next <= 3) {
+    switchLevel(next);
+  }
+}
+
+// ============================================
+// SCORE
+// ============================================
+function updateScore() {
+  document.getElementById('totalScore').textContent = state.score;
+  document.getElementById('correctCount').textContent = state.correct;
+  document.getElementById('wrongCount').textContent = state.wrong;
+}
+
+function addScore(points, isCorrect) {
+  state.score += isCorrect ? points : 0;
+  if (isCorrect) state.correct++;
+  else state.wrong++;
+  updateScore();
+}
+
+// ============================================
+// LEVEL 1: COMPONENTS ON MOTHERBOARD
+// ============================================
+const components = [
+  {
+    id: 'cpu', emoji: '⚡', name: 'CPU (Processeur)',
+    desc: 'Cerveau de l\'ordinateur — exécute les instructions',
+    zone: 'cpu'
+  },
+  {
+    id: 'ram', emoji: '🧮', name: 'RAM (Mémoire Vive)',
+    desc: 'Mémoire temporaire rapide pour les données actives',
+    zone: 'ram'
+  },
+  {
+    id: 'gpu', emoji: '🎮', name: 'GPU (Carte Graphique)',
+    desc: 'Génère l\'affichage et traite les graphiques',
+    zone: 'gpu'
+  },
+  {
+    id: 'hdd', emoji: '💾', name: 'Disque Dur (HDD/SSD)',
+    desc: 'Stockage permanent des données et programmes',
+    zone: 'hdd'
+  },
+  {
+    id: 'psu', emoji: '🔌', name: 'Alimentation (PSU)',
+    desc: 'Convertit le courant secteur pour les composants',
+    zone: 'psu'
+  },
+  {
+    id: 'chipset', emoji: '🔗', name: 'Chipset (Pont Nord/Sud)',
+    desc: 'Gère la communication entre les composants',
+    zone: 'chipset'
+  }
+];
+
+const zones1 = [
+  { id: 'cpu', label: 'Socket CPU', icon: '⬡' },
+  { id: 'ram', label: 'Slots RAM', icon: '▥' },
+  { id: 'gpu', label: 'Slot PCIe x16', icon: '▬' },
+  { id: 'hdd', label: 'Ports SATA/M.2', icon: '⬜' },
+  { id: 'psu', label: 'Connecteur ATX', icon: '⚡' },
+  { id: 'chipset', label: 'Zone Chipset', icon: '🔗' }
+];
+
+function initLevel1() {
+  const palette = document.getElementById('palette1');
+  const grid = document.getElementById('dropGrid1');
+  palette.innerHTML = '';
+  grid.innerHTML = '';
+  state.level1.placed = {};
+
+  // Shuffle components
+  const shuffled = [...components].sort(() => Math.random() - 0.5);
+
+  shuffled.forEach(comp => {
+    const item = document.createElement('div');
+    item.className = 'palette-item';
+    item.id = 'comp-' + comp.id;
+    item.draggable = true;
+    item.innerHTML = `
+      <span class="emoji">${comp.emoji}</span>
+      <div class="info">
+        <div class="name">${comp.name}</div>
+        <div class="desc">${comp.desc}</div>
+      </div>
+    `;
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', comp.id);
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+    // Touch support
+    item.addEventListener('touchstart', handleTouchStart, { passive: false });
+    item.addEventListener('touchmove', handleTouchMove, { passive: false });
+    item.addEventListener('touchend', handleTouchEnd, { passive: false });
+    palette.appendChild(item);
+  });
+
+  zones1.forEach(zone => {
+    const dropZone = document.createElement('div');
+    dropZone.className = 'drop-zone';
+    dropZone.id = 'zone-' + zone.id;
+    dropZone.dataset.zone = zone.id;
+    dropZone.innerHTML = `
+      <span class="zone-icon">${zone.icon}</span>
+      <span class="zone-label">${zone.label}</span>
+    `;
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const compId = e.dataTransfer.getData('text/plain');
+      placeComponent1(compId, dropZone);
+    });
+    // Touch
+    dropZone.addEventListener('touchend', e => {
+      e.preventDefault();
+      if (touchDragCompId) {
+        placeComponent1(touchDragCompId, dropZone);
+        touchDragCompId = null;
+      }
+    });
+    grid.appendChild(dropZone);
+  });
+}
+
+let touchDragCompId = null;
+let touchClone = null;
+
+function handleTouchStart(e) {
+  e.preventDefault();
+  const item = e.currentTarget;
+  touchDragCompId = item.id.replace('comp-', '');
+  item.classList.add('dragging');
+  touchClone = item.cloneNode(true);
+  touchClone.style.position = 'fixed';
+  touchClone.style.zIndex = '9999';
+  touchClone.style.pointerEvents = 'none';
+  touchClone.style.opacity = '0.8';
+  touchClone.style.width = item.offsetWidth + 'px';
+  document.body.appendChild(touchClone);
+  moveTouchClone(e.touches[0]);
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+  moveTouchClone(e.touches[0]);
+}
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  if (touchClone) {
+    touchClone.remove();
+    touchClone = null;
+  }
+  const item = e.currentTarget;
+  item.classList.remove('dragging');
+}
+
+function moveTouchClone(touch) {
+  if (!touchClone) return;
+  touchClone.style.left = (touch.clientX - 80) + 'px';
+  touchClone.style.top = (touch.clientY - 30) + 'px';
+}
+
+function placeComponent1(compId, dropZone) {
+  // Remove previous placement
+  if (state.level1.placed[dropZone.dataset.zone]) {
+    const prevCompId = state.level1.placed[dropZone.dataset.zone];
+    const prevItem = document.getElementById('comp-' + prevCompId);
+    if (prevItem) prevItem.classList.remove('placed');
+  }
+
+  // Remove component from other zones
+  Object.keys(state.level1.placed).forEach(zoneId => {
+    if (state.level1.placed[zoneId] === compId) {
+      delete state.level1.placed[zoneId];
+      const prevZone = document.getElementById('zone-' + zoneId);
+      if (prevZone) {
+        prevZone.classList.remove('correct', 'incorrect');
+        prevZone.innerHTML = `<span class="zone-icon">${zones1.find(z=>z.id===zoneId).icon}</span><span class="zone-label">${zones1.find(z=>z.id===zoneId).label}</span>`;
+      }
+    }
+  });
+
+  state.level1.placed[dropZone.dataset.zone] = compId;
+
+  const comp = components.find(c => c.id === compId);
+  const paletteItem = document.getElementById('comp-' + compId);
+  if (paletteItem) paletteItem.classList.add('placed');
+
+  dropZone.classList.remove('correct', 'incorrect');
+  dropZone.innerHTML = `
+    <div class="placed-item">
+      <span class="emoji">${comp.emoji}</span>
+      <span class="name">${comp.name}</span>
+    </div>
+  `;
+
+  // Clear visual feedback from all zones
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('correct', 'incorrect'));
+
+  updateL1Progress();
+}
+
+function updateL1Progress() {
+  const placed = Object.keys(state.level1.placed).length;
+  document.getElementById('l1progress').textContent = `${placed} / ${state.level1.total}`;
+  document.getElementById('l1bar').style.width = (placed / state.level1.total * 100) + '%';
+  document.getElementById('checkL1Btn').disabled = placed < state.level1.total;
+}
+
+function checkLevel1() {
+  let correct = 0;
+  const total = state.level1.total;
+
+  Object.keys(state.level1.placed).forEach(zoneId => {
+    const compId = state.level1.placed[zoneId];
+    const zone = document.getElementById('zone-' + zoneId);
+    if (compId === zoneId) {
+      zone.classList.add('correct');
+      correct++;
+      addScore(20, true);
+    } else {
+      zone.classList.add('incorrect');
+      addScore(0, false);
+    }
+  });
+
+  setTimeout(() => {
+    if (correct === total) {
+      unlockLevel(2);
+      showModal('🏆', 'Niveau 1 Terminé !', 'Tous les composants sont bien placés !', `+${correct * 20} points`);
+      launchConfetti();
+    } else {
+      showModal('🔄', `${correct}/${total} correct(s)`, 'Certains composants sont mal placés. Réessayez !', `${correct * 20} points`);
+    }
+  }, 800);
+}
+
+function resetLevel1() {
+  state.level1.placed = {};
+  document.querySelectorAll('.drop-zone').forEach(zone => {
+    const z = zones1.find(zz => zz.id === zone.dataset.zone);
+    zone.classList.remove('correct', 'incorrect', 'drag-over');
+    zone.innerHTML = `<span class="zone-icon">${z.icon}</span><span class="zone-label">${z.label}</span>`;
+  });
+  document.querySelectorAll('.palette-item').forEach(item => item.classList.remove('placed'));
+  updateL1Progress();
+}
+
+// ============================================
+// LEVEL 2: VON NEUMANN ARCHITECTURE
+// ============================================
+const vnComponents = [
+  { id: 'uc', emoji: '🎛️', name: 'Unité de Contrôle (UC)', desc: 'Décode et orchestre les instructions' },
+  { id: 'alu', emoji: '🔢', name: 'UAL (Unité Arithmétique)', desc: 'Effectue les calculs et opérations logiques' },
+  { id: 'memoire', emoji: '💾', name: 'Mémoire Principale', desc: 'Stocke données et instructions (RAM)' },
+  { id: 'entree', emoji: '⌨️', name: 'Unité d\'Entrée', desc: 'Reçoit les données (clavier, souris...)' },
+  { id: 'sortie', emoji: '🖥️', name: 'Unité de Sortie', desc: 'Affiche les résultats (écran, imprimante...)' }
+];
+
+const vnDiagramLayout = [
+  { id: 'entree', type: 'drop', label: 'Unité d\'Entrée' },
+  { type: 'arrow' },
+  { id: 'uc', type: 'drop', label: 'Unité de Contrôle' },
+  { type: 'arrow' },
+  { id: 'alu', type: 'drop', label: 'UAL' },
+  { type: 'arrow' },
+  { id: 'sortie', type: 'drop', label: 'Unité de Sortie' },
+  { type: 'newline' },
+  { type: 'arrow', label: '↕' },
+  { type: 'newline' },
+  { id: 'memoire', type: 'drop', label: 'Mémoire Principale (RAM)', span: true }
+];
+
+function initLevel2() {
+  const palette = document.getElementById('vnPalette');
+  const diagram = document.getElementById('vnDiagram');
+  palette.innerHTML = '';
+  diagram.innerHTML = '';
+  state.level2.placed = {};
+
+  const shuffled = [...vnComponents].sort(() => Math.random() - 0.5);
+  shuffled.forEach(comp => {
+    const item = document.createElement('div');
+    item.className = 'vn-palette-item';
+    item.id = 'vn-' + comp.id;
+    item.draggable = true;
+    item.innerHTML = `<span class="emoji">${comp.emoji}</span><span class="name">${comp.name}</span>`;
+    item.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', comp.id);
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+    // Touch
+    item.addEventListener('touchstart', handleTouchStartVN, { passive: false });
+    item.addEventListener('touchmove', handleTouchMoveVN, { passive: false });
+    item.addEventListener('touchend', handleTouchEndVN, { passive: false });
+    palette.appendChild(item);
+  });
+
+  vnDiagramLayout.forEach(layout => {
+    if (layout.type === 'arrow') {
+      const arrow = document.createElement('span');
+      arrow.className = 'vn-arrow';
+      arrow.textContent = layout.label || '→';
+      diagram.appendChild(arrow);
+    } else if (layout.type === 'newline') {
+      const br = document.createElement('div');
+      br.style.width = '100%';
+      diagram.appendChild(br);
+    } else if (layout.type === 'drop') {
+      const dropZone = document.createElement('div');
+      dropZone.className = 'vn-drop-zone';
+      dropZone.id = 'vn-zone-' + layout.id;
+      dropZone.dataset.zone = layout.id;
+      if (layout.span) dropZone.style.gridColumn = '1 / -1';
+      dropZone.innerHTML = `<span class="placeholder">${layout.label}</span>`;
+      dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const compId = e.dataTransfer.getData('text/plain');
+        placeComponentVN(compId, dropZone);
+      });
+      // Touch
+      dropZone.addEventListener('touchend', e => {
+        e.preventDefault();
+        if (touchDragCompIdVN) {
+          placeComponentVN(touchDragCompIdVN, dropZone);
+          touchDragCompIdVN = null;
+        }
+      });
+      diagram.appendChild(dropZone);
+    }
+  });
+}
+
+let touchDragCompIdVN = null;
+let touchCloneVN = null;
+
+function handleTouchStartVN(e) {
+  e.preventDefault();
+  const item = e.currentTarget;
+  touchDragCompIdVN = item.id.replace('vn-', '');
+  item.classList.add('dragging');
+  touchCloneVN = item.cloneNode(true);
+  touchCloneVN.style.position = 'fixed';
+  touchCloneVN.style.zIndex = '9999';
+  touchCloneVN.style.pointerEvents = 'none';
+  touchCloneVN.style.opacity = '0.8';
+  document.body.appendChild(touchCloneVN);
+  moveTouchCloneVN(e.touches[0]);
+}
+function handleTouchMoveVN(e) { e.preventDefault(); moveTouchCloneVN(e.touches[0]); }
+function handleTouchEndVN(e) {
+  e.preventDefault();
+  if (touchCloneVN) { touchCloneVN.remove(); touchCloneVN = null; }
+  e.currentTarget.classList.remove('dragging');
+}
+function moveTouchCloneVN(touch) {
+  if (!touchCloneVN) return;
+  touchCloneVN.style.left = (touch.clientX - 80) + 'px';
+  touchCloneVN.style.top = (touch.clientY - 20) + 'px';
+}
+
+function placeComponentVN(compId, dropZone) {
+  if (state.level2.placed[dropZone.dataset.zone]) {
+    const prevId = state.level2.placed[dropZone.dataset.zone];
+    const prevItem = document.getElementById('vn-' + prevId);
+    if (prevItem) prevItem.classList.remove('placed');
+  }
+  Object.keys(state.level2.placed).forEach(zoneId => {
+    if (state.level2.placed[zoneId] === compId) {
+      delete state.level2.placed[zoneId];
+      const prevZone = document.getElementById('vn-zone-' + zoneId);
+      if (prevZone) {
+        prevZone.classList.remove('correct', 'incorrect');
+        const layout = vnDiagramLayout.find(l => l.id === zoneId);
+        prevZone.innerHTML = `<span class="placeholder">${layout.label}</span>`;
+      }
+    }
+  });
+
+  state.level2.placed[dropZone.dataset.zone] = compId;
+  const comp = vnComponents.find(c => c.id === compId);
+  const paletteItem = document.getElementById('vn-' + compId);
+  if (paletteItem) paletteItem.classList.add('placed');
+
+  dropZone.classList.remove('correct', 'incorrect');
+  dropZone.innerHTML = `
+    <span class="emoji">${comp.emoji}</span>
+    <span class="name">${comp.name}</span>
+    <span class="desc">${comp.desc}</span>
+  `;
+
+  document.querySelectorAll('.vn-drop-zone').forEach(z => z.classList.remove('correct', 'incorrect'));
+  updateL2Progress();
+}
+
+function updateL2Progress() {
+  const placed = Object.keys(state.level2.placed).length;
+  document.getElementById('l2progress').textContent = `${placed} / ${state.level2.total}`;
+  document.getElementById('l2bar').style.width = (placed / state.level2.total * 100) + '%';
+  document.getElementById('checkL2Btn').disabled = placed < state.level2.total;
+}
+
+function checkLevel2() {
+  let correct = 0;
+  const total = state.level2.total;
+
+  Object.keys(state.level2.placed).forEach(zoneId => {
+    const compId = state.level2.placed[zoneId];
+    const zone = document.getElementById('vn-zone-' + zoneId);
+    if (compId === zoneId) {
+      zone.classList.add('correct');
+      correct++;
+      addScore(30, true);
+    } else {
+      zone.classList.add('incorrect');
+      addScore(0, false);
+    }
+  });
+
+  setTimeout(() => {
+    if (correct === total) {
+      unlockLevel(3);
+      showModal('🏗️', 'Niveau 2 Terminé !', 'Architecture de Von Neumann parfaite !', `+${correct * 30} points`);
+      launchConfetti();
+    } else {
+      showModal('🔄', `${correct}/${total} correct(s)`, 'Revoyez le schéma de Von Neumann !', `${correct * 30} points`);
+    }
+  }, 800);
+}
+
+function resetLevel2() {
+  state.level2.placed = {};
+  document.querySelectorAll('.vn-drop-zone').forEach(zone => {
+    const layout = vnDiagramLayout.find(l => l.id === zone.dataset.zone);
+    zone.classList.remove('correct', 'incorrect');
+    zone.innerHTML = `<span class="placeholder">${layout.label}</span>`;
+  });
+  document.querySelectorAll('.vn-palette-item').forEach(item => item.classList.remove('placed'));
+  updateL2Progress();
+}
+
+// ============================================
+// LEVEL 3: QUIZ
+// ============================================
+const quizQuestions = [
+  {
+    q: "Quel composant est considéré comme le « cerveau » de l'ordinateur ?",
+    options: ["La RAM", "Le CPU (Processeur)", "Le Disque Dur", "Le GPU"],
+    correct: 1,
+    explanation: "Le CPU (Central Processing Unit) exécute les instructions des programmes et coordonne toutes les opérations de l'ordinateur."
+  },
+  {
+    q: "Quelle est la différence principale entre la RAM et le disque dur ?",
+    options: [
+      "La RAM est plus lente",
+      "Le disque dur est volatile",
+      "La RAM est volatile (perte de données hors tension), le disque dur est non-volatile",
+      "Il n'y a aucune différence"
+    ],
+    correct: 2,
+    explanation: "La RAM est une mémoire volatile : elle perd ses données quand l'ordinateur est éteint. Le disque dur conserve les données de manière permanente."
+  },
+  {
+    q: "Dans l'architecture de Von Neumann, quel composant effectue les calculs arithmétiques ?",
+    options: ["L'Unité de Contrôle (UC)", "L'UAL (Unité Arithmétique et Logique)", "La Mémoire", "Le Bus"],
+    correct: 1,
+    explanation: "L'UAL (Unité Arithmétique et Logique) est chargée d'effectuer toutes les opérations mathématiques (addition, multiplication...) et logiques (ET, OU, NON...)."
+  },
+  {
+    q: "Quel est le rôle du Bus dans un ordinateur ?",
+    options: [
+      "Stocker les données",
+      "Exécuter les programmes",
+      "Transporter les données entre les composants",
+      "Afficher l'image à l'écran"
+    ],
+    correct: 2,
+    explanation: "Le Bus est un ensemble de fils (connexions) qui permet la circulation des données, adresses et signaux de contrôle entre les différents composants."
+  },
+  {
+    q: "Que signifie le cycle « Fetch-Decode-Execute » du processeur ?",
+    options: [
+      "Allumer, utiliser, éteindre",
+      "Lire l'instruction, la décoder, l'exécuter",
+      "Charger, sauvegarder, afficher",
+      "Compiler, linker, exécuter"
+    ],
+    correct: 1,
+    explanation: "Le processeur fonctionne en cycle : il FETCH (récupère) l'instruction en mémoire, la DECODE (comprend ce qu'elle demande), puis l'EXECUTE (réalise l'opération)."
+  },
+  {
+    q: "Quel type de mémoire est le plus rapide ?",
+    options: ["Disque Dur (HDD)", "RAM", "Registres du processeur", "Mémoire Cache L3"],
+    correct: 2,
+    explanation: "Les registres du processeur sont la mémoire la plus rapide car ils sont intégrés directement dans le CPU. Vitesse : Registres > Cache L1 > Cache L2 > Cache L3 > RAM > SSD > HDD."
+  },
+  {
+    q: "Quelle unité mesure la fréquence d'un processeur ?",
+    options: ["Octets (Bytes)", "Hertz (Hz)", "Pixels", "Volts (V)"],
+    correct: 1,
+    explanation: "La fréquence du processeur se mesure en Hertz (Hz). Un processeur à 3.5 GHz exécute 3.5 milliards de cycles par seconde."
+  },
+  {
+    q: "Quel est le rôle du BIOS/UEFI ?",
+    options: [
+      "Afficher le bureau Windows",
+      "Initialiser le matériel au démarrage et lancer le système d'exploitation",
+      "Connecter à Internet",
+      "Gérer les fichiers de l'utilisateur"
+    ],
+    correct: 1,
+    explanation: "Le BIOS/UEFI est un firmware qui initialise les composants matériels au démarrage (POST), puis charge le système d'exploitation depuis le disque."
+  }
+];
+
+function initLevel3() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+  state.level3.answered = 0;
+
+  quizQuestions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    card.id = 'quiz-' + i;
+
+    const letters = ['A', 'B', 'C', 'D'];
+    let optionsHTML = q.options.map((opt, j) => `
+      <div class="quiz-option" data-quiz="${i}" data-option="${j}" onclick="answerQuiz(${i}, ${j})">
+        <span class="letter">${letters[j]}</span>
+        <span>${opt}</span>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <h3>❓ Question ${i + 1} / ${quizQuestions.length}</h3>
+      <p class="q-text">${q.q}</p>
+      <div class="quiz-options">${optionsHTML}</div>
+      <div class="quiz-explanation" id="expl-${i}"></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function answerQuiz(qIndex, optIndex) {
+  const q = quizQuestions[qIndex];
+  const card = document.getElementById('quiz-' + qIndex);
+  const options = card.querySelectorAll('.quiz-option');
+
+  // Prevent re-answering
+  if (card.dataset.answered) return;
+  card.dataset.answered = 'true';
+
+  const isCorrect = optIndex === q.correct;
+  state.level3.answered++;
+
+  options.forEach((opt, j) => {
+    opt.classList.add('disabled');
+    if (j === q.correct) opt.classList.add('correct');
+    if (j === optIndex && !isCorrect) opt.classList.add('wrong');
+  });
+
+  const expl = document.getElementById('expl-' + qIndex);
+  expl.className = 'quiz-explanation show ' + (isCorrect ? 'correct-exp' : 'wrong-exp');
+  expl.innerHTML = (isCorrect ? '✅ Correct ! ' : '❌ Incorrect. ') + q.explanation;
+
+  addScore(isCorrect ? 25 : 0, isCorrect);
+  updateL3Progress();
+
+  if (state.level3.answered === state.level3.total) {
+    document.getElementById('checkL3Btn').disabled = false;
+  }
+}
+
+function updateL3Progress() {
+  const answered = state.level3.answered;
+  document.getElementById('l3progress').textContent = `${answered} / ${state.level3.total}`;
+  document.getElementById('l3bar').style.width = (answered / state.level3.total * 100) + '%';
+}
+
+function finishQuiz() {
+  const total = state.level3.total;
+  const answered = state.level3.answered;
+
+  // Count correct from DOM
+  let correct = 0;
+  for (let i = 0; i < total; i++) {
+    const card = document.getElementById('quiz-' + i);
+    const correctOpt = card.querySelector('.quiz-option.correct');
+    const selectedWrong = card.querySelector('.quiz-option.wrong');
+    if (correctOpt && !selectedWrong) correct++;
+  }
+
+  if (correct >= total * 0.7) {
+    showModal('🎓', 'Quiz Terminé !', `Vous avez ${correct}/${total} bonnes réponses ! Maîtrise de l'architecture des ordinateurs validée !`, `Score final : ${state.score} points`);
+    launchConfetti();
+  } else {
+    showModal('📚', `${correct}/${total} bonnes réponses`, 'Continuez à réviser ! Vous y êtes presque.', `Score : ${state.score} points`);
+  }
+}
+
+// ============================================
+// MODAL
+// ============================================
+function showModal(emoji, title, text, scoreText) {
+  document.getElementById('modalEmoji').textContent = emoji;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalScore').textContent = scoreText;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ============================================
+// UNLOCK LEVELS
+// ============================================
+function unlockLevel(n) {
+  if (!state.unlockedLevels.includes(n)) {
+    state.unlockedLevels.push(n);
+  }
+  const badge = document.getElementById('badge' + n);
+  if (badge) {
+    badge.textContent = '●';
+    badge.className = 'badge';
+  }
+}
+
+// ============================================
+// CONFETTI
+// ============================================
+function launchConfetti() {
+  const colors = ['#00d4ff', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+  for (let i = 0; i < 80; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti-piece';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.top = '-10px';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    confetti.style.width = (5 + Math.random() * 10) + 'px';
+    confetti.style.height = (5 + Math.random() * 10) + 'px';
+    document.body.appendChild(confetti);
+
+    const duration = 1.5 + Math.random() * 2;
+    const xDrift = (Math.random() - 0.5) * 200;
+    confetti.animate([
+      { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+      { transform: `translate(${xDrift}px, ${window.innerHeight + 20}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+    ], { duration: duration * 1000, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' });
+
+    setTimeout(() => confetti.remove(), duration * 1000);
+  }
+}
+
+// ============================================
+// INIT
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+  initLevel1();
+  initLevel2();
+  initLevel3();
+  updateScore();
+});
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+</script>
+</body>
+</html>
